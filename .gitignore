@@ -1,5 +1,6 @@
 # Prerequisites
 *.d
+*.zzdep
 
 # Compiled Object files
 *.slo
