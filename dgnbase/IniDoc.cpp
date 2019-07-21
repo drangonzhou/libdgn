@@ -93,11 +93,9 @@ int IniDoc::LoadBuf( const CStr & buf )
 			printf( "n %d, p[0] %c, p[n] %c\n", (int)n, p[0], p[n] );
 			if( *(p + n) != ']' )
 				return -1;
-			size_t i = n - 1;
-			printf( "(1) i %lld\n", i );
+			int i = (int)n - 1;
 			while( i >= 0 && ( *(p + i) == ' ' || *(p + i) == '\t' ) )
 				i--;
-			printf( "(2) i %lld\n", i );
 			CStr name;
 			name.Assign( p, i + 1 );
 			p += n + 1;
@@ -123,14 +121,14 @@ int IniDoc::LoadBuf( const CStr & buf )
 			if( *(p + n) == '\n' )
 				return -1;
 			CStr key, value;
-			size_t i = n - 1;
+			int i = (int)n - 1;
 			while( i >= 0 && ( *(p + i) == ' ' || *(p + i) == '\t' ) )
 				i--;
 			key.Assign( p, i + 1 );
 			p += n + 1;
 			p += strspn( p, " \t" );
 			size_t n2 = strcspn( p, "\r\n" );
-			i = n2 - 1;
+			i = (int)n2 - 1;
 			while( i >= 0 && ( *(p + i) == ' ' || *(p + i) == '\t' ) )
 				i--;
 			value.Assign( p, i + 1 );
