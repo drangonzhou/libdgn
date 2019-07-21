@@ -90,7 +90,6 @@ int IniDoc::LoadBuf( const CStr & buf )
 			p += 1; // skip '['
 			p += strspn( p, " \t" );
 			size_t n = strcspn( p, "]\n" );
-			printf( "n %d, p[0] %c, p[n] %c\n", (int)n, p[0], p[n] );
 			if( *(p + n) != ']' )
 				return -1;
 			int i = (int)n - 1;
@@ -105,7 +104,6 @@ int IniDoc::LoadBuf( const CStr & buf )
 			if( *p == '\r' && *(p + 1) == '\n' )
 				p += 1;
 			p += 1;
-			printf( "name is [%s], i %d\n", name.Str(), (int)i );
 			sect = GetSection( name.Str() );
 			if( sect == NULL ) {
 				AddSection( name.Str() );
