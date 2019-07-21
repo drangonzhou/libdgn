@@ -84,7 +84,7 @@ CStr & CStr::operator = ( const CStr & str )
 int CStr::Reserve( int len )
 {
 	if( m_flag != DGN_CSTR_FLAG_NORMAL )
-		return m_cap;
+		return -1;
 
 	if( len <= 0 )
 		return -1;
@@ -117,6 +117,7 @@ int CStr::Assign( const char * str, int len )
 			m_str[0] = '\0';
 			return 0;
 		}
+		// NOTE : side effect to release buffer
 		if( m_cap > 0 ) {
 			delete [] m_str; 
 			m_str = (char *)&m_len;
@@ -132,6 +133,7 @@ int CStr::Assign( const char * str, int len )
 		blen = slen + 1;
 	}
 	else {
+		// NOTE : str may not end with '\0', or has '\0' less than len
 		blen = len + 1;
 		const char * p = str;
 		while( p < str + len && *p != '\0' )
@@ -161,6 +163,7 @@ int CStr::AssignFmt( const char * fmt, ... )
 			m_str[0] = '\0';
 			return 0;
 		}
+		// NOTE : side effect to release buffer
 		if( m_cap > 0 ) {
 			delete [] m_str; 
 			m_str = (char *)&m_len;
@@ -220,6 +223,7 @@ int CStr::Append( const char * str, int len )
 		blen = slen + 1;
 	}
 	else {
+		// NOTE : str may not end with '\0', or has '\0' less than len
 		blen = len + 1;
 		const char * p = str;
 		while( *p != '\0' && p < str + len )
@@ -382,10 +386,17 @@ CStr & CStr::AttachBuffer( char * buf, int bufsize )
 		if( m_cap != 0 )
 			delete [] m_str, m_str = NULL;
 	}
+	if( buf == NULL || bufsize <= 0 ) {
+		m_str = (char *)&m_len;
+		m_len = 0;
+		m_cap = 0;
+		m_flag = DGN_CSTR_FLAG_EXTBUF;
+		return *this;
+	}
+	buf[bufsize - 1] = '\0';
 	m_str = buf;
-	m_str[0] = '\0';
 	m_cap = bufsize;
-	m_len = 0;
+	m_len = strlen(m_str);
 	m_flag = DGN_CSTR_FLAG_EXTBUF;
 	return *this;
 }
@@ -396,8 +407,15 @@ CStr & CStr::AttachConst( const char * str, int len )
 		if( m_cap != 0 )
 			delete [] m_str, m_str = NULL;
 	}
+	if( str == NULL ) {
+		m_str = (char *)&m_len;
+		m_len = 0;
+		m_cap = 0;
+		m_flag = DGN_CSTR_FLAG_EXTCONST;
+		return *this;
+	}
 	m_str = (char *)str;
-	m_len = len;
+	m_len = (len < 0) ? strlen(str) : len;
 	m_cap = m_len + 1;
 	m_flag = DGN_CSTR_FLAG_EXTCONST;
 	return *this;

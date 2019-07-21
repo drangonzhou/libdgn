@@ -22,6 +22,12 @@
 BEGIN_NS_DGN
 ////////////////
 
+// Note :
+// CStr wrap "char *" c-style string, always valid, maybe empty "", but never be NULL
+// CStr always end with '\0'
+// copy or construct or assign from extbuf or extconst CStr will create a normal 
+// assign to NULL will has side effect to release buffer ( cap = 0 )
+
 enum {
 	DGN_CSTR_FLAG_NORMAL = 0,
 	DGN_CSTR_FLAG_EXTBUF,	// point to exist buffer, can not resize or release
@@ -43,7 +49,7 @@ public:
 
 	// change mode, buffer or const must end with '\0'
 	CStr & AttachBuffer( char * buf, int bufsize ); 
-	CStr & AttachConst( const char * str, int len = -1 );
+	CStr & AttachConst( const char * str, int len = -1 ); // if len != -1, then len must be correct string len
 	CStr & AttachNone();
 
 	static const CStr & EmptyCStrObj();
@@ -52,19 +58,22 @@ public:
 	operator const char * () const { return m_str; }
 	const char * Str() const { return m_str; } // always not NULL
 	int Len() const { return m_len; }
+	int Cap() const { return m_cap; }
+
 	int Reserve( int cap ); // enlarge if need, not shrink if too much, may allocate more
 
-	// access raw pointer, use as risk, 
+	// access raw pointer, should not access over boundary, use as risk!!
 	char * GetRaw() { return m_str; }
-	int ReleaseRaw( int len );
+	// after modify raw data, must use ReleaseRaw() to adjust correct length
+	int ReleaseRaw( int len ); // if len < 0 || len >= cap, bad len, set len to 0
 
 public:
 	int Assign( const CStr & str ) { return Assign( str.Str(), str.Len() ); }
-	int Assign( const char * s, int len = -1 );
+	int Assign( const char * s, int len = -1 ); // s may not end with '\0', or has '\0' less than len
 	int AssignFmt( const char * fmt, ... ) DGN_ATTR_PRINTF(2,3);
 
 	int Append( const CStr & str ) { return Append( str.Str(), str.Len() ); }
-	int Append( const char * s, int len = -1 );
+	int Append( const char * s, int len = -1 ); // s may not end with '\0', or has '\0' less than len
 	int AppendFmt( const char * fmt, ... ) DGN_ATTR_PRINTF(2,3);
 
 	int Cmp( const CStr & str, int len = -1 ) const { return Cmp( str.Str(), len ); }
