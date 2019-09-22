@@ -67,6 +67,13 @@ uint32_t Time::Tick()
 #endif
 }
 
+long Time::NowSec()
+{
+	return (long)time( NULL );
+}
+
+long Time::s_NowSecEx = 0;
+
 void Time::SleepMs( int ms )
 {
 #ifdef _WIN32

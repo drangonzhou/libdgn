@@ -20,6 +20,10 @@
 #include <dgn/dgn.h>
 #include <dgn/CStr.h>
 
+#ifdef _MSC_VER
+#pragma comment( lib, "winmm" )
+#endif
+
 BEGIN_NS_DGN
 ////////////////
 
@@ -28,8 +32,12 @@ class CStr;
 class Time
 {
 public:
-	static int64_t Now();
-	static uint32_t Tick();
+	static int64_t Now();  // us
+	static uint32_t Tick(); // ms
+	static long NowSec();  // sec
+	static long s_NowSecEx;  // cached time value
+	static long NowSecEx() {	long now = NowSec(); s_NowSecEx = now; return now; } // sec, update cache time
+	static long NowSecFast() {	return s_NowSecEx; }  // sec, fast, use cache time
 	static void SleepMs( int ms );
 
 public:

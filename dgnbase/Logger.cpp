@@ -26,6 +26,10 @@
 #include <windows.h>
 #include <fcntl.h>
 #include <io.h>
+#define open _open
+#define close _close
+#define write _write
+#define snprintf _snprintf
 #else
 #include <unistd.h>
 #include <sys/stat.h>
@@ -91,6 +95,8 @@ void Logger::Log( int level, const char * file, int line, const char * fmt, ... 
 {
 	if( level < m_level )
 		return;
+	if( level > 7 )
+		level = 7;
 	if( m_fname[0] == '\0' && m_syslog_enable == 0 && m_stderr_enable == 0 )
 		return;
 
@@ -105,12 +111,13 @@ void Logger::Log( int level, const char * file, int line, const char * fmt, ... 
 			sf = p + 1;
 	}
 
+	static const char * s_level_str[8] = { "0", "1", "DBG", "3", "INFO", "5", "ERR", "7" };
 	va_list ap;
 	int len;
 	int ret;
 	char buf[2048];
-	len = snprintf( buf, sizeof(buf) - 1, "[%02d%02d %02d:%02d:%02d.%06d][%s:%d] ",
-			tm.m_month, tm.m_day, tm.m_hour, tm.m_minute, tm.m_sec, tm.m_usec, sf, line );
+	len = snprintf( buf, sizeof(buf) - 1, "%02d%02d %02d:%02d:%02d.%06d|%s:%d|%s ",
+			tm.m_month, tm.m_day, tm.m_hour, tm.m_minute, tm.m_sec, tm.m_usec, sf, line, s_level_str[level] );
 	va_start( ap, fmt );
 	ret = vsnprintf( buf + len, sizeof(buf) - len - 1, fmt, ap );
 	va_end( ap );
@@ -133,7 +140,8 @@ void Logger::Log( int level, const char * file, int line, const char * fmt, ... 
 #ifdef _WIN32
 		OutputDebugStringA( buf );
 #else
-		syslog( LOG_LOCAL3 | LOG_ERR, "[%s", buf + 15 );
+		static const int s_syslog_level[8] = { LOG_DEBUG, LOG_DEBUG, LOG_DEBUG, LOG_INFO, LOG_INFO, LOG_WARNING, LOG_ERROR, LOG_CRIT };
+		syslog( LOG_LOCAL3 | s_syslog_level[level], "%s", buf + 14 );
 #endif
 	}
 

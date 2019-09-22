@@ -15,6 +15,7 @@
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 
 #ifdef _WIN32
+#define _WINSOCK_DEPRECATED_NO_WARNINGS
 #define FD_SETSIZE	1024
 #include <winsock2.h>   // must include at first 
 #endif
@@ -115,6 +116,24 @@ int Socket::GetAddrIp( const struct sockaddr_storage * addr, int addrlen, char i
 			*port = ntohs( ((const struct sockaddr_in6 *)addr)->sin6_port );
 	}
 	return 0;
+}
+
+char * Socket::GetAddrIp( uint32_t ip_be, char ip[DGN_IP_LEN] )
+{
+	struct in_addr ia;
+	ia.s_addr = ip_be;
+	ip[0] = '\0';
+#ifdef _WIN32
+	char * tmp = inet_ntoa( ia );
+	if( tmp == NULL ) {
+		ip[0] = '\0';
+		return ip;
+	}
+	strcpy( ip, tmp ); // NOTE : ip buf should big enough
+#else
+	inet_ntop( AF_INET, (void *)&ia, ip, INET_ADDRSTRLEN );
+#endif
+	return ip;
 }
 
 char * Socket::Resolve( const char * host, char ip[DGN_IP_LEN] )
@@ -273,7 +292,7 @@ enum socket_connect_result_e Socket::ConnectCheck()
 		ret = getsockopt( m_sock, SOL_SOCKET, SO_ERROR, (void *)&err, &len );
 		if( ret == 0 && err == 0 )
 			return DGN_SOCKET_CONNECT_OK; // connected
-		PR_DEBUG( "getsockopt ret %d, err %d", ret, err );
+		//PR_DEBUG( "getsockopt ret %d, err %d", ret, err );
 		return DGN_SOCKET_CONNECT_FAILED; // failed
 	}
 
@@ -573,6 +592,8 @@ int Socket::RecvFrom( char * buf, int len, char remote_ip[DGN_IP_LEN], int * por
 		return ret;
 	}
 	if( ret < 0 && ! IS_ERR_EAGAIN() ) {
+		// TODO : 10054 is normal£¬cause by prev port unreachable ICMP
+		PR_DEBUG( "recvfrom error %d", (int)GET_ERRNO() );
 		return -1;
 	}
 
@@ -593,6 +614,8 @@ int Socket::RecvFrom( char * buf, int len, char remote_ip[DGN_IP_LEN], int * por
 		return ret;
 	}
 	if( ret < 0 && ! IS_ERR_EAGAIN() ) {
+		// TODO : 10054 is normal£¬cause by prev port unreachable ICMP
+		PR_DEBUG( "recvfrom error %d", (int)GET_ERRNO() );
 		return -1;
 	}
 

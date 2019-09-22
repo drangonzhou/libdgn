@@ -19,6 +19,10 @@
 
 #include <dgn/CStr.h>
 
+#ifdef _MSC_VER
+#pragma comment( lib, "ws2_32" )
+#endif
+
 struct sockaddr_storage;
 
 BEGIN_NS_DGN
@@ -52,6 +56,7 @@ class Socket
 public:
 	static int GetHostAddr( const char * host, int port, struct sockaddr_storage * addr, int * addrlen );
 	static int GetAddrIp( const struct sockaddr_storage * addr, int addrlen, char ip[DGN_IP_LEN], int * port );
+	static char * GetAddrIp( uint32_t ip_ne, char ip[DGN_IP_LEN] );
 	static char * Resolve( const char * host, char ip[DGN_IP_LEN] );
 	static CStr Resolve( const char * host );
 	static int SetNonBlock( sock_t sock, int nonblock );
@@ -62,6 +67,7 @@ public:
 
 public:
 	int SetTimeout( int timeout_ms ) { m_timeout_ms = timeout_ms; return 0; }
+	int GetTimeout() const { return m_timeout_ms; }
 
 	enum socket_connect_result_e Connect( const char * host, int port );
 	enum socket_connect_result_e ConnectCheck(); // return at once, no timeout
@@ -75,6 +81,7 @@ public:
 	int AttachSock( sock_t sk ); // old sock closed, new sock own by me
 	sock_t DetachSock(); // detached sock need close by outside
 
+	bool IsValid() const { return m_sock != DGN_INVALID_SOCK; }
 	int Close();
 
 public:
