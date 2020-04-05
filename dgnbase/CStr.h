@@ -93,11 +93,18 @@ public:
 		Append( str );
 		return *this;
 	}
+	CStr & operator += ( const char * str ) {
+		Append( str );
+		return *this;
+	}
 
 	friend CStr operator + ( const CStr & left, const CStr & right );
+	friend CStr operator + ( const CStr & left, const char * right );
 
 	friend bool operator == ( const CStr & left, const CStr & right );
+	friend bool operator == ( const CStr & left, const char * right );
 	friend bool operator != ( const CStr & left, const CStr & right );
+	friend bool operator != ( const CStr & left, const char * right );
 	friend bool operator < ( const CStr & left, const CStr & right );
 	friend bool operator > ( const CStr & left, const CStr & right );
 
@@ -116,12 +123,25 @@ protected:
 	int m_flag; // flags
 };
 
+CStr operator + ( const CStr & left, const CStr & right );
+CStr operator + ( const CStr & left, const char * right );
+
 inline bool operator == ( const CStr & left, const CStr & right )
 {
 	return left.Cmp( right ) == 0;
 }
 
+inline bool operator == ( const CStr & left, const char * right )
+{
+	return left.Cmp( right ) == 0;
+}
+
 inline bool operator != ( const CStr & left, const CStr & right )
+{
+	return ! ( left == right );
+}
+
+inline bool operator != ( const CStr & left, const char * right )
 {
 	return ! ( left == right );
 }
@@ -135,8 +155,6 @@ inline bool operator > ( const CStr & left, const CStr & right )
 {
 	return right < left;
 }
-
-CStr operator + ( const CStr & left, const CStr & right );
 
 ////////////////
 END_NS_DGN

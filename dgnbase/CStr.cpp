@@ -364,6 +364,25 @@ CStr operator + ( const CStr & left, const CStr & right )
 	return str;
 }
 
+CStr operator + ( const CStr & left, const char * right )
+{
+	if( right == NULL || right[0] == '\0' )
+		return CStr( left );
+	int len_right = (int)strlen(right);
+	int len = left.Len() + len_right;
+	if( len == 0 )
+		return CStr();
+	CStr str;
+	str.m_len = len;
+	str.m_cap = len + 1;
+	str.m_str = new char[len + 1];
+	if( left.Len() > 0 )
+		memcpy( str.m_str, left.m_str, left.Len() );
+	memcpy( str.m_str + left.Len(), right, len_right );
+	str.m_str[len] = '\0';
+	return str;
+}
+
 int CStr::ReleaseRaw( int len )
 {
 	if( m_cap == 0 ) {
