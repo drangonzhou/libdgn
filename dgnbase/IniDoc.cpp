@@ -29,9 +29,27 @@ int IniSection::Set( const char * key, const char * val )
 	return 0;
 }
 
+int IniSection::Set( const CStr & key, const CStr & val )
+{
+	if( key.Len() == 0 )
+		return -1;
+	m_kvs[key] = val;
+	return 0;
+}
+
 int IniSection::Del( const char * key )
 {
 	return m_kvs.erase( CStr().AttachConst( key ) );
+}
+
+int IniSection::Del( const CStr & key )
+{
+	return m_kvs.erase( key );
+}
+
+CStr & IniSection::Get( const CStr & key )
+{
+	return m_kvs[key];
 }
 
 const char * IniSection::Get( const char * key ) const
@@ -42,10 +60,20 @@ const char * IniSection::Get( const char * key ) const
 	return it->second.Str();
 }
 
-int IniDoc::Load( const char * fname )
+const CStr & IniSection::Get( const CStr & key ) const
 {
+	std::map< CStr, CStr >::const_iterator it = m_kvs.find( CStr().AttachConst( key ) );
+	if( it == m_kvs.end() )
+		return CStr::EmptyCStrObj();
+	return it->second.Str();
+}
+
+int IniDoc::LoadFile( const char * fname )
+{
+	if( fname == NULL )
+		return -1;
 	CStr buf;
-	FILE * fp = fopen( fname, "r" );
+	FILE * fp = fopen( fname, "rb" );
 	if( fp == NULL )
 		return -1;
 	fseek( fp, 0, SEEK_END );
@@ -59,17 +87,22 @@ int IniDoc::Load( const char * fname )
 	return LoadBuf( buf );
 }
 
-int IniDoc::LoadBuf( const CStr & buf )
+int IniDoc::LoadBuf( const char * buf, int len )
 {
+	if( buf == NULL )
+		return -1;
+	if( len == -1 )
+		len = (int)strlen( buf );
+	const char * p = buf;
+	CStr name;
 	IniSection * sect = NULL;
-	const char * p = buf.Str();
 	int line = 1; // line end with \r\n or \n, single \r should not happend, treat as one line
 	while( *p != '\0' ) {
 		p += strspn( p, " \t" );
 		if( *p == '\0' ) {
 			break;
 		}
-		else if( *p == '\r' ) {
+		if( *p == '\r' ) {
 			// single '\r' ? should not happend, treat as single line
 			if( *(p+1) == '\n' )
 				p += 1;
@@ -95,7 +128,6 @@ int IniDoc::LoadBuf( const CStr & buf )
 			int i = (int)n - 1;
 			while( i >= 0 && ( *(p + i) == ' ' || *(p + i) == '\t' ) )
 				i--;
-			CStr name;
 			name.Assign( p, i + 1 );
 			p += n + 1;
 			p += strspn( p, " \t" );
@@ -104,11 +136,7 @@ int IniDoc::LoadBuf( const CStr & buf )
 			if( *p == '\r' && *(p + 1) == '\n' )
 				p += 1;
 			p += 1;
-			sect = GetSection( name.Str() );
-			if( sect == NULL ) {
-				AddSection( name.Str() );
-				sect = GetSection( name.Str() );
-			}
+			sect = &GetSection( name );
 		}
 		else {
 			// read key/value : key name = value data
@@ -135,16 +163,16 @@ int IniDoc::LoadBuf( const CStr & buf )
 			p += n2 + 1;
 			if( sect == NULL ) {
 				AddSection( "" );
-				sect = GetSection( "" );
+				sect = &GetSection( CStr() );
 			}
-			sect->Set( key.Str(), value.Str() );
+			sect->Get( key ) = std::move(value);
 		}
 		line += 1;
 	}
 	return 0;
 }
 
-int IniDoc::Save( const char * fname )
+int IniDoc::SaveFile( const char * fname )
 {
 	CStr buf;
 	SaveBuf( &buf );
@@ -163,7 +191,7 @@ int IniDoc::SaveBuf( CStr * buf )
 	for( it = Begin(); it != End(); ++it ) {
 		len += it->first.Len() + 3;
 		IniSection::CIter it2;
-		for( it2 = it->second->Begin(); it2 != it->second->End(); ++it2 ) {
+		for( it2 = it->second.Begin(); it2 != it->second.End(); ++it2 ) {
 			len += it2->first.Len() + it2->second.Len() + 3;
 		}
 		len += 1;
@@ -175,7 +203,7 @@ int IniDoc::SaveBuf( CStr * buf )
 	for( it = Begin(); it != End(); ++it ) {
 		buf->AppendFmt( "[%s]\n", it->first.Str() );
 		IniSection::CIter it2;
-		for( it2 = it->second->Begin(); it2 != it->second->End(); ++it2 ) {
+		for( it2 = it->second.Begin(); it2 != it->second.End(); ++it2 ) {
 			buf->AppendFmt( "%s = %s\n", it2->first.Str(), it2->second.Str() );
 		}
 		buf->Append( "\n" );
@@ -185,54 +213,60 @@ int IniDoc::SaveBuf( CStr * buf )
 	return 0;
 }
 
-int IniDoc::Reset()
+int IniDoc::AddSection( const CStr & name )
 {
-	Iter it;
-	for( it = Begin(); it != End(); ++it ) {
-		delete it->second, it->second = NULL;	
-	}
-	m_sects.clear();
-	return 0;
-}
-
-int IniDoc::AddSection( const char * name )
-{
-	CStr ns;
-	ns.AttachConst( name );
-	if( m_sects.find( ns ) != m_sects.end() )
+	if( m_sects.find( name ) != m_sects.end() )
 		return 0;
-	IniSection * sect = new IniSection();
-	m_sects.insert( std::make_pair<>( ns, sect ) );
+	m_sects.insert( std::make_pair<>( name, IniSection() ) );
 	return 1;
 }
 
-int IniDoc::DelSection( const char * name )
+int IniDoc::DelSection( const CStr & name )
 {
-	return m_sects.erase( CStr().AttachConst( name ) );
+	return m_sects.erase( name );
 }
 
-IniSection * IniDoc::GetSection( const char * name )
+IniSection & IniDoc::GetSection( const CStr & name )
 {
-	Iter it = m_sects.find( CStr().AttachConst( name ) );
+	return m_sects[name];
+}
+
+CStr & IniDoc::Get( const CStr & name, const CStr & key )
+{
+	return GetSection( name ).Get( key );
+}
+
+int IniDoc::Set( const CStr & name, const CStr & key, const CStr & val )
+{
+	return GetSection( name ).Set( key, val );
+}
+
+int IniDoc::Del( const CStr & name, const CStr & key )
+{
+	return GetSection( name ).Del( key );
+}
+
+const IniSection * IniDoc::GetSection( const char * name ) const
+{
+	CIter it = m_sects.find( CStr().AttachConst( name ) );
 	if( it == End() )
 		return NULL;
+	return &it->second;
+}
+
+static const IniSection s_default_sect;
+
+const IniSection & IniDoc::GetSection( const CStr & name ) const
+{
+	CIter it = m_sects.find( name );
+	if( it == End() )
+		return s_default_sect;
 	return it->second;
 }
 
-int IniDoc::Set( const char * name, const char * key, const char * val )
+bool IniDoc::HasSection( const CStr & name ) const
 {
-	IniSection * sect = GetSection( name );
-	if( sect == NULL )
-		return 0;
-	return sect->Set( key, val );
-}
-
-int IniDoc::Del( const char * name, const char * key )
-{
-	IniSection * sect = GetSection( name );
-	if( sect == NULL )
-		return 0;
-	return sect->Del( key );
+	return m_sects.find( name ) != m_sects.end();
 }
 
 const char * IniDoc::Get( const char * name, const char * key ) const
@@ -240,7 +274,23 @@ const char * IniDoc::Get( const char * name, const char * key ) const
 	CIter it = m_sects.find( name );
 	if( it == m_sects.end() )
 		return NULL;
-	return it->second->Get( key );
+	return it->second.Get( key );
+}
+
+const CStr & IniDoc::Get( const CStr & name, const CStr & key ) const
+{
+	CIter it = m_sects.find( name );
+	if( it == m_sects.end() )
+		return CStr::EmptyCStrObj();
+	return it->second.Get( key );
+}
+
+bool IniDoc::HasKey( const CStr & name, const CStr & key ) const
+{
+	CIter it = m_sects.find( name );
+	if( it == m_sects.end() )
+		return false;
+	return it->second.HasKey( key );
 }
 
 ////////////////

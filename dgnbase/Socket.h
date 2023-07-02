@@ -51,7 +51,7 @@ typedef int sock_t;
 #endif
 #define DGN_INVALID_SOCK ((sock_t)-1)
 
-class Socket
+class DGN_LIB_API Socket
 {
 public:
 	static int GetHostAddr( const char * host, int port, struct sockaddr_storage * addr, int * addrlen );

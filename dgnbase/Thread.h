@@ -34,7 +34,7 @@ BEGIN_NS_DGN
 
 class CondVal;
 
-class Mutex
+class DGN_LIB_API Mutex
 {
 public:
 	Mutex()
@@ -82,7 +82,7 @@ protected:
 #endif
 };
 
-class MutexGuard
+class DGN_LIB_API MutexGuard
 {
 public:
 	MutexGuard( Mutex * mutex ) : m_mutex( mutex ) { m_mutex->Lock(); }
@@ -100,7 +100,7 @@ protected:
 // only the last signal value is valid, only one wait can get signal value
 // signal value keep valid until some one wait and get it
 
-class CondVal
+class DGN_LIB_API CondVal
 {
 public:
 	CondVal() : m_val(0)
@@ -153,7 +153,7 @@ enum {
 	THREAD_STATE_USER = 20, // user custom state should begin from here
 };
 
-class Thread
+class DGN_LIB_API Thread
 {
 public:
 	Thread();
@@ -197,7 +197,7 @@ private:
 
 typedef int (* thread_func_t)( Thread * th, void * arg );
 
-class ThreadObj : public Thread
+class DGN_LIB_API ThreadObj : public Thread
 {
 public:
 	ThreadObj( thread_func_t func = NULL, void * arg = NULL );

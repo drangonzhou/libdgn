@@ -63,7 +63,7 @@ int Logger::InitLevel( int level )
 	return 0;
 }
 
-int Logger::InitLogFile( const char * logfile )
+int Logger::InitLogFile( const char * logfile, int max_size_mb, int max_roll )
 {
 	if( m_fd >= 0 ) {
 		close( m_fd ), m_fd = -1;
@@ -125,7 +125,7 @@ void Logger::Log( int level, const char * file, int line, const char * fmt, ... 
 	if( ret >= 0 && ret <= (int)sizeof(buf) - len - 1 )
 		len += ret;
 	else
-		len = strlen( buf );
+		len = (int)strlen( buf );
 
 	if( m_fname[0] != '\0' ) {
 		if( check_log_file( tm.m_year, tm.m_month, tm.m_day ) >= 0 )
@@ -172,7 +172,7 @@ int Logger::check_log_file( int year, int month, int day )
 	}
 
 	// TODO : check dir exist
-	char fname[512];
+	char fname[512] = { 0 };
 	snprintf( fname, sizeof(fname) - 1, "%s.%04d-%02d-%02d.txt", m_fname, year, month, day );
 #ifdef _WIN32
 	int flag = _O_CREAT | _O_APPEND | _O_WRONLY | _O_BINARY;

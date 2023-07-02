@@ -42,7 +42,7 @@ enum dgn_file_seek_e {
 	DGN_SEEK_END,   // offset relate to file end ( usually neg )
 };
 
-class File
+class DGN_LIB_API File
 {
 public:
 	File();

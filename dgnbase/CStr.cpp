@@ -41,7 +41,7 @@ CStr::CStr()
 
 CStr::~CStr()
 {
-	if( m_flag == 0 && m_cap > 0 )
+	if( m_flag == DGN_CSTR_FLAG_NORMAL && m_cap != 0 )
 		delete [] m_str, m_str = NULL;
 }	
 
@@ -63,6 +63,14 @@ CStr::CStr( const CStr & str )
 	Assign( str.Str(), str.Len() );
 }
 
+CStr::CStr( CStr && str )
+{
+	m_len = str.m_len; str.m_len = 0;
+	m_cap = str.m_cap; str.m_cap = 0;
+	m_flag = str.m_flag; str.m_flag = DGN_CSTR_FLAG_NORMAL;
+	m_str = ( m_cap == 0 ) ? (char *)&m_len : str.m_str; str.m_str = (char *)&str.m_len;
+}
+
 CStr & CStr::operator = ( const char * s )
 {
 	if( m_str == s )
@@ -81,6 +89,20 @@ CStr & CStr::operator = ( const CStr & str )
 	return *this;
 }
 
+CStr & CStr::operator = ( CStr && str )
+{
+	if( this == &str )
+		return *this;
+
+	if( m_flag == DGN_CSTR_FLAG_NORMAL && m_cap == 1 )
+		delete[] m_str, m_str = NULL;
+	m_len = str.m_len; str.m_len = 0;
+	m_cap = str.m_cap; str.m_cap = 0;
+	m_flag = str.m_flag; str.m_flag = DGN_CSTR_FLAG_NORMAL;
+	m_str = ( m_cap == 0 ) ? (char *)&m_len : str.m_str; str.m_str = (char *)&str.m_len;
+	return *this;
+}
+
 int CStr::Reserve( int len )
 {
 	if( m_flag != DGN_CSTR_FLAG_NORMAL )
@@ -96,6 +118,8 @@ int CStr::Reserve( int len )
 	int newlen = m_cap * 2 + m_cap / 8;
 	if( newlen < len )
 		newlen = len;
+	if( newlen < 16 )
+		newlen = 16;
 	char * str = new char[newlen];
 	if( m_len > 0 )
 		memcpy( str, m_str, m_len );
@@ -143,7 +167,7 @@ int CStr::Assign( const char * str, int len )
 
 	m_len = 0;
 	Reserve( blen );
-	if( slen >= m_cap )
+	if( slen > m_cap - 1 )
 		slen = m_cap - 1;
 	if( slen > 0 )
 		memcpy( m_str, str, slen );
@@ -415,7 +439,7 @@ CStr & CStr::AttachBuffer( char * buf, int bufsize )
 	buf[bufsize - 1] = '\0';
 	m_str = buf;
 	m_cap = bufsize;
-	m_len = strlen(m_str);
+	m_len = (int)strlen(m_str);
 	m_flag = DGN_CSTR_FLAG_EXTBUF;
 	return *this;
 }
@@ -434,7 +458,7 @@ CStr & CStr::AttachConst( const char * str, int len )
 		return *this;
 	}
 	m_str = (char *)str;
-	m_len = (len < 0) ? strlen(str) : len;
+	m_len = (len < 0) ? (int)strlen(str) : len;
 	m_cap = m_len + 1;
 	m_flag = DGN_CSTR_FLAG_EXTCONST;
 	return *this;

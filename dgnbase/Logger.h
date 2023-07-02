@@ -48,7 +48,7 @@ enum {
 BEGIN_NS_DGN
 ////////////////
 
-class Logger
+class DGN_LIB_API Logger
 {
 public:
 	Logger();
@@ -57,7 +57,7 @@ public:
 	int InitLevel( int level );
 	int InitSyslog( int enable );
 	int InitStderr( int enable );
-	int InitLogFile( const char * logfile );
+	int InitLogFile( const char * logfile, int max_size_mb = 200, int max_roll = 10 );
 
 	void Log( int level, const char * file, int line, const char * fmt, ... ) DGN_ATTR_PRINTF(5,6);
 	void DoAssert( const char * file, int line, const char * msg );

@@ -308,7 +308,7 @@ int Time::FromRfc( const char * str )
 {
 	const char * p = str;
 	int n = 0;
-	n = strcspn( p, " ," );
+	n = (int)strcspn( p, " ," );
 	if( p[n] == '\0' )
 		return -1;
 

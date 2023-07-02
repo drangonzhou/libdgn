@@ -16,17 +16,16 @@
 
 #include <dgn/IniDoc.h>
 
-#include <gtest/gtest.h>
+#include "catch.hpp"
 
 using namespace dgn;
 
-TEST( inidoc, loadsave)
+TEST_CASE( "inidoc load/save", "[ini]")
 {
 	IniDoc doc;
 	int ret;
-	ret = doc.Load( "sample_ini.ini" );
-	EXPECT_TRUE( ret >= 0 );
-	ret = doc.Save( "out_ini.ini" );
-	EXPECT_TRUE( ret >= 0 );
+	ret = doc.LoadFile( "sample_ini.ini" );
+	CHECK( ret >= 0 );
+	ret = doc.SaveFile( "out_ini.ini" );
+	CHECK( ret >= 0 );
 }
-

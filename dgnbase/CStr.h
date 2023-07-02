@@ -34,7 +34,7 @@ enum {
 	DGN_CSTR_FLAG_EXTCONST,	// point const string, can not modify or release
 };
 
-class CStr
+class DGN_LIB_API CStr
 {
 public:
 	CStr();
@@ -42,10 +42,12 @@ public:
 	// copy a new CStr, use CStr().AttachConst( s ) and const & to avoid copy
 	CStr( const char * s );
 	CStr( const CStr & str );
+	CStr( CStr && str );
 	~CStr();
 
 	CStr & operator = ( const char * s );
 	CStr & operator = ( const CStr & str );
+	CStr & operator = ( CStr && str );
 
 	// change mode, buffer or const must end with '\0'
 	CStr & AttachBuffer( char * buf, int bufsize ); 
@@ -98,15 +100,15 @@ public:
 		return *this;
 	}
 
-	friend CStr operator + ( const CStr & left, const CStr & right );
-	friend CStr operator + ( const CStr & left, const char * right );
+	friend DGN_LIB_API CStr operator + ( const CStr & left, const CStr & right );
+	friend DGN_LIB_API CStr operator + ( const CStr & left, const char * right );
 
-	friend bool operator == ( const CStr & left, const CStr & right );
-	friend bool operator == ( const CStr & left, const char * right );
-	friend bool operator != ( const CStr & left, const CStr & right );
-	friend bool operator != ( const CStr & left, const char * right );
-	friend bool operator < ( const CStr & left, const CStr & right );
-	friend bool operator > ( const CStr & left, const CStr & right );
+	friend DGN_LIB_API bool operator == ( const CStr & left, const CStr & right );
+	friend DGN_LIB_API bool operator == ( const CStr & left, const char * right );
+	friend DGN_LIB_API bool operator != ( const CStr & left, const CStr & right );
+	friend DGN_LIB_API bool operator != ( const CStr & left, const char * right );
+	friend DGN_LIB_API bool operator < ( const CStr & left, const CStr & right );
+	friend DGN_LIB_API bool operator > ( const CStr & left, const CStr & right );
 
 public:
 	static int Cmp( const char * s1, const char * s2, int n = -1 );
@@ -117,41 +119,42 @@ public:
 	static double ToDouble( const char * s );
 
 protected:
+	// min cap 16, attach cap >= 1, special case : m_len = 0, m_cap = 0, m_str = &m_len
 	char * m_str; // always not NULL, 
-	int m_len;  // string len, must < cap unless == 0
+	int m_len;  // string len, must < cap, unless cap == 0
 	int m_cap;  // capacity
 	int m_flag; // flags
 };
 
-CStr operator + ( const CStr & left, const CStr & right );
-CStr operator + ( const CStr & left, const char * right );
+DGN_LIB_API CStr operator + ( const CStr & left, const CStr & right );
+DGN_LIB_API CStr operator + ( const CStr & left, const char * right );
 
-inline bool operator == ( const CStr & left, const CStr & right )
+DGN_LIB_API inline bool operator == ( const CStr & left, const CStr & right )
 {
 	return left.Cmp( right ) == 0;
 }
 
-inline bool operator == ( const CStr & left, const char * right )
+DGN_LIB_API inline bool operator == ( const CStr & left, const char * right )
 {
 	return left.Cmp( right ) == 0;
 }
 
-inline bool operator != ( const CStr & left, const CStr & right )
+DGN_LIB_API inline bool operator != ( const CStr & left, const CStr & right )
 {
 	return ! ( left == right );
 }
 
-inline bool operator != ( const CStr & left, const char * right )
+DGN_LIB_API inline bool operator != ( const CStr & left, const char * right )
 {
 	return ! ( left == right );
 }
 
-inline bool operator < ( const CStr & left, const CStr & right )
+DGN_LIB_API inline bool operator < ( const CStr & left, const CStr & right )
 {
 	return left.Cmp( right ) < 0;
 }
 
-inline bool operator > ( const CStr & left, const CStr & right )
+DGN_LIB_API inline bool operator > ( const CStr & left, const CStr & right )
 {
 	return right < left;
 }

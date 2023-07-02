@@ -79,7 +79,7 @@ int Socket::GetHostAddr( const char * host, int port, struct sockaddr_storage * 
 	if( ret != 0 || res == NULL )
 		return -1;
 	// only use the first resolve result
-	*addrlen = res->ai_addrlen;
+	*addrlen = (int)res->ai_addrlen;
 	memcpy( addr, res->ai_addr, res->ai_addrlen );
 	if( res != NULL )
 		freeaddrinfo( res ), res = NULL;
@@ -157,7 +157,7 @@ CStr Socket::Resolve( const char * host )
 	char * p = str.GetRaw();
 	p[DGN_IP_LEN - 1] = '\0';
 	Resolve( host, p );
-	str.ReleaseRaw( strlen(p) );
+	str.ReleaseRaw( (int)strlen(p) );
 	return str;
 }
 
@@ -457,7 +457,7 @@ int Socket::LocalAddr( CStr * ip, int * port )
 	char * p = ip->GetRaw();
 	p[DGN_IP_LEN - 1] = '\0';
 	int ret = LocalAddr( p, port );
-	ip->ReleaseRaw( strlen(p) );
+	ip->ReleaseRaw( (int)strlen(p) );
 	return ret;
 }
 
@@ -483,7 +483,7 @@ int Socket::RemoteAddr( CStr * ip, int * port )
 	char * p = ip->GetRaw();
 	p[DGN_IP_LEN - 1] = '\0';
 	int ret = RemoteAddr( p, port );
-	ip->ReleaseRaw( strlen(p) );
+	ip->ReleaseRaw( (int)strlen(p) );
 	return ret;
 }
 

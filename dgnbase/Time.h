@@ -29,7 +29,7 @@ BEGIN_NS_DGN
 
 class CStr;
 
-class Time
+class DGN_LIB_API Time
 {
 public:
 	static int64_t Now();  // us
@@ -82,12 +82,12 @@ public:
 	int ToRfc( CStr * ret ) const;
 	CStr ToRfc() const;
 
-	friend bool operator < ( const Time & a, const Time & b );
-	friend bool operator <= ( const Time & a, const Time & b );
-	friend bool operator > ( const Time & a, const Time & b );
-	friend bool operator >= ( const Time & a, const Time & b );
-	friend bool operator == ( const Time & a, const Time & b );
-	friend int64_t operator - ( const Time & a, const Time & b );
+	friend DGN_LIB_API bool operator < ( const Time & a, const Time & b );
+	friend DGN_LIB_API bool operator <= ( const Time & a, const Time & b );
+	friend DGN_LIB_API bool operator > ( const Time & a, const Time & b );
+	friend DGN_LIB_API bool operator >= ( const Time & a, const Time & b );
+	friend DGN_LIB_API bool operator == ( const Time & a, const Time & b );
+	friend DGN_LIB_API int64_t operator - ( const Time & a, const Time & b );
 
 	static int IsLeapYear( int year );
 	static int ToYday( int year, int month, int day );
@@ -101,7 +101,7 @@ public:
 	static const char * GetMonthName( int month ); // 1~12
 };
 
-inline bool operator < ( const Time & a, const Time & b )
+DGN_LIB_API inline bool operator < ( const Time & a, const Time & b )
 {
 	if( a.m_year < b.m_year ) return true;
 	else if( a.m_year > b.m_year ) return false;
@@ -119,7 +119,7 @@ inline bool operator < ( const Time & a, const Time & b )
 	else return false;
 }
 
-inline bool operator <= ( const Time & a, const Time & b )
+DGN_LIB_API inline bool operator <= ( const Time & a, const Time & b )
 {
 	if( a.m_year < b.m_year ) return true;
 	else if( a.m_year > b.m_year ) return false;
@@ -137,22 +137,22 @@ inline bool operator <= ( const Time & a, const Time & b )
 	else return false;
 }
 
-inline bool operator > ( const Time & a, const Time & b )
+DGN_LIB_API inline bool operator > ( const Time & a, const Time & b )
 {
 	return b < a;
 }
 
-inline bool operator >= ( const Time & a, const Time & b )
+DGN_LIB_API inline bool operator >= ( const Time & a, const Time & b )
 {
 	return b <= a;
 }
 
-inline bool operator == ( const Time & a, const Time & b )
+DGN_LIB_API inline bool operator == ( const Time & a, const Time & b )
 {
 	return ( a.m_year == b.m_year && a.m_month == b.m_month && a.m_day == b.m_day && a.m_hour == b.m_hour && a.m_minute == b.m_minute && a.m_sec == b.m_sec && a.m_usec == b.m_usec );
 }
 
-inline int64_t operator - ( const Time & a, const Time & b )
+DGN_LIB_API inline int64_t operator - ( const Time & a, const Time & b )
 {
 	return a.ToTUS() - b.ToTUS();
 }

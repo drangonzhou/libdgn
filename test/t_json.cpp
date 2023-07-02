@@ -18,11 +18,11 @@
 
 #include <dgn/JsonVal.h>
 
-#include <gtest/gtest.h>
+#include "catch.hpp"
 
 using namespace dgn;
 
-TEST( json, json )
+TEST_CASE( "json test", "[json]")
 {
 	JsonVal jv;
 	jv.SetTrue();
@@ -48,8 +48,9 @@ TEST( json, json )
 	CStr str = jv.ToBuf();
 	jv = 20;
 
-	jv.FromBuf( str );
+	int ret = jv.FromBuf( str );
 	printf( "test %g\n", jv["ss"].GetDouble() );
 
+	CHECK( ret >= 0 );
 }
 

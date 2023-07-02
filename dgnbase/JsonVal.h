@@ -38,7 +38,7 @@ enum jsonval_type_e
 	JSONVAL_TYPE_OBJECT,
 };
 
-class JsonVal
+class DGN_LIB_API JsonVal
 {
 public:
 	explicit JsonVal( enum jsonval_type_e type = JSONVAL_TYPE_NULL );

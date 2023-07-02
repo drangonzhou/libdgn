@@ -17,14 +17,14 @@
 #include <dgn/CStr.h>
 #include <dgn/Time.h>
 
-#include <gtest/gtest.h>
+#include "catch.hpp"
 
 #include <stdio.h>
 #include <string.h>
 
 using namespace dgn;
 
-TEST( time, gmt )
+TEST_CASE( "gmt time", "[time]")
 {
 	Time t;
 	int64_t t1, t2;
@@ -50,9 +50,11 @@ TEST( time, gmt )
 	printf( "<3> : ret %d, [%s]\n", ret, t.ToRfc().Str() );
 	ret = t.FromRfc( "Tue Jan 18 21:47:38 2013" );
 	printf( "<4> : ret %d, [%s]\n", ret, t.ToRfc().Str() );
+
+	CHECK( ret >= 0 );
 }
 
-TEST( time, sleep )
+TEST_CASE( "sleep some time", "[time]")
 {
 	int64_t t1, t2;
 	t1 = Time::Now();
@@ -69,5 +71,7 @@ TEST( time, sleep )
 	Time::SleepMs( 100 );
 	t2 = Time::Now();
 	printf( "sleep 100, diff %d\n", (int)(t2 - t1) );
+
+	CHECK( t2 >= t1 );
 }
 

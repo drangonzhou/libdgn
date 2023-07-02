@@ -14,7 +14,8 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 
-#include <gtest/gtest.h>
+#define CATCH_CONFIG_RUNNER
+#include "catch.hpp"
 
 #include <dgn/Logger.h>
 
@@ -31,8 +32,11 @@ int main( int argc, char **argv )
 
 	PR_DEBUG( "begin test : %d, %f, [%s]", 30, 40.2, __func__ );
 
-	testing::InitGoogleTest(&argc, argv);
-	ret = RUN_ALL_TESTS();
+	Catch::Session session; // There must be exactly one instance
+	int returnCode = session.applyCommandLine( argc, argv );
+	if( returnCode != 0 ) // Indicates a command line error
+		return returnCode;
+	ret = session.run();
 
 	PR_DEBUG( "end test : ret = %d, %g, [%s]", ret, 40.2, __func__ );
 
@@ -40,4 +44,3 @@ int main( int argc, char **argv )
 
 	return ret;
 }
-

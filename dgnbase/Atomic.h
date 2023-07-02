@@ -26,7 +26,7 @@
 BEGIN_NS_DGN
 ////////////////
 
-class Atomic
+class DGN_LIB_API Atomic
 {
 public:
 	Atomic( int val = 0 ) : m_val( val ) {}
@@ -96,4 +96,3 @@ inline int Atomic::Dec()
 END_NS_DGN
 
 #endif // INCLUDED_DGN_ATOMIC_H
-
