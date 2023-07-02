@@ -1,5 +1,5 @@
 // JsonVal.cpp : json value
-// Copyright (C) 2011 ~ 2019 drangon <drangon.zhou (at) gmail.com>
+// Copyright (C) 2011 ~ 2023 drangon <drangon.zhou (at) gmail.com>
 //
 // This program is free software: you can redistribute it and/or modify it
 // under the terms of the GNU Lesser General Public License as published by
@@ -22,11 +22,13 @@
 BEGIN_NS_DGN
 ////////////////////////////////
 
-static const JsonVal s_jsonval_null;
+static const JsonVal s_jsonval_empty;
+static const std::vector< JsonVal > s_jsonval_array_empty;
+static const std::map< CStr, JsonVal > s_jsonval_object_empty;
 
 const JsonVal & JsonVal::NullJsonVal()
 {
-	return s_jsonval_null;
+	return s_jsonval_empty;
 }
 
 JsonVal::JsonVal( enum jsonval_type_e type ) : m_type( type )
@@ -46,10 +48,10 @@ JsonVal::JsonVal( enum jsonval_type_e type ) : m_type( type )
 		m_val.s = new dgn::CStr();
 		break;
 	case JSONVAL_TYPE_ARRAY :
-		m_val.arr = new std::vector< JsonVal * >();
+		m_val.arr = new std::vector< JsonVal >();
 		break;
 	case JSONVAL_TYPE_OBJECT :
-		m_val.obj = new std::map< CStr, JsonVal * >();
+		m_val.obj = new std::map< CStr, JsonVal >();
 		break;
 	default :
 		break;
@@ -81,11 +83,56 @@ JsonVal::JsonVal( const char * val, int n )
 	m_val.s->Assign( val, n );
 }
 
+JsonVal::JsonVal( const CStr & val )
+{
+	m_type = JSONVAL_TYPE_STRING;
+	m_val.s = new dgn::CStr( val );
+}
+
+JsonVal::JsonVal( CStr && val )
+{
+	m_type = JSONVAL_TYPE_STRING;
+	m_val.s = new dgn::CStr( val );
+}
+
 JsonVal::JsonVal( const JsonVal & jv )
 {
 	m_type = JSONVAL_TYPE_NULL;
 	assign( jv );
 }
+
+JsonVal::JsonVal( JsonVal && jv )
+{
+	m_type = jv.m_type;
+	switch( m_type )
+	{
+	case JSONVAL_TYPE_NULL:
+	case JSONVAL_TYPE_FALSE:
+	case JSONVAL_TYPE_TRUE:
+	case JSONVAL_TYPE_INT:
+		m_val.i = jv.m_val.i;
+		break;
+	case JSONVAL_TYPE_DOUBLE:
+		m_val.d = jv.m_val.d;
+		break;
+	case JSONVAL_TYPE_STRING:
+		m_val.s = jv.m_val.s;
+		jv.m_val.s = NULL;
+		break;
+	case JSONVAL_TYPE_ARRAY:
+		m_val.arr = jv.m_val.arr;
+		jv.m_val.arr = NULL;
+		break;
+	case JSONVAL_TYPE_OBJECT:
+		m_val.obj = jv.m_val.obj;
+		jv.m_val.obj = NULL;
+		break;
+	default:
+		break;
+	};
+	jv.m_type = JSONVAL_TYPE_NULL;
+}
+
 
 JsonVal::~JsonVal()
 {
@@ -100,21 +147,9 @@ void JsonVal::clear()
 		delete m_val.s;
 		break;
 	case JSONVAL_TYPE_ARRAY :
-		{
-			std::vector< JsonVal * >::iterator vit;
-			for( vit = m_val.arr->begin(); vit != m_val.arr->end(); ++vit ) {
-				delete *vit, *vit = NULL;
-			}
-		}
 		delete m_val.arr;
 		break;
 	case JSONVAL_TYPE_OBJECT :
-		{
-			std::map< CStr, JsonVal * >::iterator oit;
-			for( oit = m_val.obj->begin(); oit != m_val.obj->end(); ++oit ) {
-				delete oit->second, oit->second = NULL;
-			}
-		}
 		delete m_val.obj;
 		break;
 	default :
@@ -130,6 +165,42 @@ JsonVal & JsonVal::operator = ( const JsonVal & jv )
 	if( this == &jv )
 		return *this;
 	assign( jv );
+	return *this;
+}
+
+JsonVal & JsonVal::operator = ( JsonVal && jv )
+{
+	if( this == &jv )
+		return *this;
+	clear();
+	m_type = jv.m_type;
+	switch( m_type )
+	{
+	case JSONVAL_TYPE_NULL:
+	case JSONVAL_TYPE_FALSE:
+	case JSONVAL_TYPE_TRUE:
+	case JSONVAL_TYPE_INT:
+		m_val.i = jv.m_val.i;
+		break;
+	case JSONVAL_TYPE_DOUBLE:
+		m_val.d = jv.m_val.d;
+		break;
+	case JSONVAL_TYPE_STRING:
+		m_val.s = jv.m_val.s;
+		jv.m_val.s = NULL;
+		break;
+	case JSONVAL_TYPE_ARRAY:
+		m_val.arr = jv.m_val.arr;
+		jv.m_val.arr = NULL;
+		break;
+	case JSONVAL_TYPE_OBJECT:
+		m_val.obj = jv.m_val.obj;
+		jv.m_val.obj = NULL;
+		break;
+	default:
+		break;
+	};
+	jv.m_type = JSONVAL_TYPE_NULL;
 	return *this;
 }
 
@@ -158,13 +229,13 @@ void JsonVal::assign( const JsonVal & jv )
 		break;
 	case JSONVAL_TYPE_ARRAY :
 		if( m_type == JSONVAL_TYPE_NULL )
-			m_val.arr = new std::vector< JsonVal * >( *jv.m_val.arr );
+			m_val.arr = new std::vector< JsonVal >( *jv.m_val.arr );
 		else
 			*m_val.arr = *jv.m_val.arr;
 		break;
 	case JSONVAL_TYPE_OBJECT :
 		if( m_type == JSONVAL_TYPE_NULL )
-			m_val.obj = new std::map< CStr, JsonVal * >( *jv.m_val.obj );
+			m_val.obj = new std::map< CStr, JsonVal >( *jv.m_val.obj );
 		else
 			*m_val.obj = *jv.m_val.obj;
 		break;
@@ -174,11 +245,6 @@ void JsonVal::assign( const JsonVal & jv )
 	m_type = jv.m_type;
 
 	return;
-}
-
-enum jsonval_type_e JsonVal::GetType() const
-{
-	return m_type;
 }
 
 void JsonVal::SetType( enum jsonval_type_e type )
@@ -203,10 +269,10 @@ void JsonVal::SetType( enum jsonval_type_e type )
 		m_val.s = new dgn::CStr();
 		break;
 	case JSONVAL_TYPE_ARRAY :
-		m_val.arr = new std::vector< JsonVal * >();
+		m_val.arr = new std::vector< JsonVal >();
 		break;
 	case JSONVAL_TYPE_OBJECT :
-		m_val.obj = new std::map< CStr, JsonVal * >();
+		m_val.obj = new std::map< CStr, JsonVal >();
 		break;
 	default :
 		break;
@@ -274,77 +340,55 @@ JsonVal & JsonVal::operator = ( double val )
 	return *this;
 }
 
-const char * JsonVal::GetString() const
+const CStr & JsonVal::GetString() const
 {
 	if( m_type != JSONVAL_TYPE_STRING )
-		return NULL;
-	return m_val.s->Str();
-}
-
-void JsonVal::SetString( const char * str, int n )
-{
-	SetType( JSONVAL_TYPE_STRING );
-	m_val.s->Assign( str, n );
-	return;
+		return CStr::EmptyCStrObj();
+	return *m_val.s;
 }
 
 void JsonVal::SetString( const CStr & str )
 {
 	SetType( JSONVAL_TYPE_STRING );
-	m_val.s->Assign( str );
+	( *m_val.s ) = str;
 	return;
 }
 
-JsonVal & JsonVal::operator = ( const char * str )
+void JsonVal::SetString( CStr && str )
 {
-	SetString( str );
-	return *this;
+	SetType( JSONVAL_TYPE_STRING );
+	( *m_val.s ) = str;
+	return;
 }
 
-JsonVal & JsonVal::operator = ( const CStr & str )
+int JsonVal::Size() const
 {
-	SetString( str );
-	return *this;
-}
-
-int JsonVal::GetArrayLen() const
-{
-	if( m_type != JSONVAL_TYPE_ARRAY )
-		return 0;
-	return (int)m_val.arr->size();
+	if( m_type == JSONVAL_TYPE_ARRAY )
+		return (int)m_val.arr->size();
+	else if( m_type == JSONVAL_TYPE_OBJECT )
+		return (int)m_val.obj->size();
+	return 0;
 }
 
 const JsonVal & JsonVal::GetItem( int index ) const
 {
 	if( m_type != JSONVAL_TYPE_ARRAY || index < 0 || index >= (int)m_val.arr->size() )
-		return JsonVal::NullJsonVal();
-	return *((*m_val.arr)[index]);
+		return NullJsonVal();
+	return (*m_val.arr)[index];
 }
 
-JsonVal & JsonVal::GotItem( int index )
+JsonVal::ArrayCIter JsonVal::ArrayBegin() const
 {
-	SetType( JSONVAL_TYPE_ARRAY );
-	if( index < 0 ) {
-		index = 0;
-	}
-	int sz = (int)m_val.arr->size();
-	if( index >= sz ) {
-		m_val.arr->resize( index + 1);
-		int i;
-		for( i = sz; i < index + 1; i++ )
-			(*m_val.arr)[i] = new JsonVal;
-	}
-	return *((*m_val.arr)[index]);
+	if( m_type == JSONVAL_TYPE_ARRAY )
+		return m_val.arr->begin();
+	return s_jsonval_array_empty.begin();
 }
 
-const JsonVal & JsonVal::operator [] ( int index ) const
+JsonVal::ArrayCIter JsonVal::ArrayEnd() const
 {
-	return GetItem( index );
-}
-
-JsonVal & JsonVal::operator [] ( int index )
-{
-	return GotItem( index );
+	if( m_type == JSONVAL_TYPE_ARRAY )
+		return m_val.arr->end();
+	return s_jsonval_array_empty.end();
 }
 
 void JsonVal::SetArray( int size )
@@ -352,121 +396,106 @@ void JsonVal::SetArray( int size )
 	SetType( JSONVAL_TYPE_ARRAY );
 	if( size < 0 )
 		size = 0;
-	int sz = (int)m_val.arr->size();
-	if( size > sz ) {
-		m_val.arr->resize( size );
-		int i;
-		for( i = sz; i < size; ++i )
-			(*m_val.arr)[i] = new JsonVal;
-	}
-	else if( size < sz ) {
-		int i;
-		for( i = size; i < sz; ++i )
-			delete (*m_val.arr)[i];
-		m_val.arr->resize( size );
-	}
-
+	m_val.arr->resize( size );
 	return;
+}
+
+JsonVal & JsonVal::GetItem( int index )
+{
+	SetType( JSONVAL_TYPE_ARRAY );
+	if( index < 0 ) {
+		index = 0;
+	}
+	int sz = (int)m_val.arr->size();
+	if( index >= sz ) {
+		m_val.arr->resize( index + 1 );
+	}
+	return (*m_val.arr)[index];
 }
 
 void JsonVal::SetItem( int index, const JsonVal & obj )
 {
-	JsonVal & val = GotItem( index );
+	JsonVal & val = GetItem( index );
 	val = obj;
 	return;
 }
 
-int JsonVal::GetAllItemName( std::vector< CStr > * ret ) const
+void JsonVal::SetItem( int index, JsonVal && obj )
 {
-	if( ret == NULL || m_type != JSONVAL_TYPE_OBJECT ) {
-		return -1;
-	}
-	std::map< CStr, JsonVal * >::const_iterator oit;
-	for( oit = m_val.obj->begin(); oit != m_val.obj->end(); ++oit ) {
-		ret->push_back( oit->first );
-	}
-	return 0;
+	JsonVal & val = GetItem( index );
+	val = obj;
+	return;
 }
 
-const JsonVal & JsonVal::GetItem( const char * name ) const
+JsonVal::ArrayIter JsonVal::ArrayBegin()
 {
-	return GetItem( CStr().AttachConst( name ) );
+	SetType( JSONVAL_TYPE_ARRAY );
+	return m_val.arr->begin();
+}
+
+JsonVal::ArrayIter JsonVal::ArrayEnd()
+{
+	SetType( JSONVAL_TYPE_ARRAY );
+	return m_val.arr->end();
 }
 
 const JsonVal & JsonVal::GetItem( const CStr & name ) const
 {
 	if( m_type != JSONVAL_TYPE_OBJECT )
 		return NullJsonVal();
-	std::map< CStr, JsonVal *>::const_iterator it = m_val.obj->find( name );
+	std::map< CStr, JsonVal >::const_iterator it = m_val.obj->find( name );
 	if( it == m_val.obj->end() )
 		return NullJsonVal();
-	return *(it->second);
+	return it->second;
 }
 
-JsonVal & JsonVal::GotItem( const char * name ) // create item and change type if needed
+JsonVal::ObjectCIter JsonVal::ObjectBegin() const
 {
-	return GotItem( CStr().AttachConst( name ) );
+	if( m_type == JSONVAL_TYPE_OBJECT )
+		return m_val.obj->begin();
+	return s_jsonval_object_empty.begin();
 }
 
-JsonVal & JsonVal::GotItem( const CStr & name ) // create item and change type if needed
+JsonVal::ObjectCIter JsonVal::ObjectEnd() const
 {
-	SetType( JSONVAL_TYPE_OBJECT );
-	JsonVal * obj = (*m_val.obj)[name];
-	if( obj == NULL ) {
-		obj = new JsonVal;
-		(*m_val.obj)[name] = obj;
-	}
-	return *obj;
+	if( m_type == JSONVAL_TYPE_OBJECT )
+		return m_val.obj->end();
+	return s_jsonval_object_empty.end();
 }
 
-const JsonVal & JsonVal::operator [] ( const char * name ) const
-{
-	return GetItem( name );
-}
-
-const JsonVal & JsonVal::operator [] ( const CStr & name ) const
-{
-	return GetItem( name );
-}
-
-JsonVal & JsonVal::operator [] ( const char * name )
-{
-	return GotItem( name );
-}
-
-JsonVal & JsonVal::operator [] ( const CStr & name )
-{
-	return GotItem( name );
-}
-
-void JsonVal::SetObject()
+JsonVal & JsonVal::GetItem( const CStr & name ) // create item and change type if needed
 {
 	SetType( JSONVAL_TYPE_OBJECT );
-	return;
-}
-
-void JsonVal::SetItem( const char * name, const JsonVal & obj )
-{
-	SetItem( CStr().AttachConst( name ), obj );
-	return;
+	return ( *m_val.obj )[name];
 }
 
 void JsonVal::SetItem( const CStr & name, const JsonVal & obj )
 {
-	JsonVal & val = GotItem( name );
+	JsonVal & val = GetItem( name );
 	val = obj;
 	return;
 }
 
-
-JsonVal JsonVal::Parse( const char * json )
+void JsonVal::SetItem( const CStr & name, JsonVal && obj )
 {
-	JsonVal jv;
-	jv.FromBuf( json );
-	return jv;
+	JsonVal & val = GetItem( name );
+	val = obj;
+	return;
 }
 
-JsonVal JsonVal::Parse( const CStr & json )
+JsonVal::ObjectIter JsonVal::ObjectBegin()
+{
+	SetType( JSONVAL_TYPE_OBJECT );
+	return m_val.obj->begin();
+}
+
+JsonVal::ObjectIter JsonVal::ObjectEnd()
+{
+	SetType( JSONVAL_TYPE_OBJECT );
+	return m_val.obj->end();
+}
+
+JsonVal JsonVal::Parse( const char * json )
 {
 	JsonVal jv;
 	jv.FromBuf( json );
@@ -490,20 +519,15 @@ int JsonVal::FromBuf( const char * str )
 	return tmp;
 }
 
-int JsonVal::FromBuf( const CStr & json )
-{
-	return FromBuf( json.Str() );
-}
-
-int JsonVal::ToBuf( char * buf, int maxlen ) const
-{
-	if( buf == NULL || maxlen <= 0 )
-		return -1;
-	buf[0] = '\0';
-	CStr str;
-	str.AttachBuffer( buf, maxlen );
-	return ToBuf( &str );
-}
+//int JsonVal::ToBuf( char * buf, int maxlen ) const
+//{
+//	if( buf == NULL || maxlen <= 0 )
+//		return -1;
+//	buf[0] = '\0';
+//	CStr str;
+//	str.AttachBuffer( buf, maxlen );
+//	return ToBuf( &str );
+//}
 
 int JsonVal::ToBuf( CStr * buf ) const
 {
@@ -514,13 +538,6 @@ int JsonVal::ToBuf( CStr * buf ) const
 	buf->Reserve( olen + sz + 1 );
 	do_to_json( buf );
 	return buf->Len() - olen;
-}
-
-CStr JsonVal::ToBuf() const
-{
-	CStr str;
-	ToBuf( &str );
-	return str;
 }
 
 int JsonVal::get_json_size() const
@@ -548,27 +565,23 @@ int JsonVal::get_json_size() const
 		sz = m_val.s->Len() + 2;
 		break;
 	case JSONVAL_TYPE_ARRAY :
-		{
-			int i, num;
-			num = GetArrayLen();
-			for( i = 0; i < num; ++i ) {
-				const JsonVal & item = GetItem( i );
-				sz += item.get_json_size() + 2;
-			}
-			sz += 4;
+	{
+		int i, num;
+		num = Size();
+		for( i = 0; i < num; ++i ) {
+			const JsonVal & item = GetItem( i );
+			sz += item.get_json_size() + 2;
 		}
-		break;
+		sz += 4;
+	}
+	break;
 	case JSONVAL_TYPE_OBJECT :
-		{
-			std::vector< CStr > nms;
-			GetAllItemName( &nms );
-			std::vector< CStr >::iterator vit;
-			for( vit = nms.begin(); vit != nms.end(); ++ vit ) {
-				const JsonVal & item = GetItem( *vit );
-				sz += vit->Len() + 2 + 3 + item.get_json_size() + 2;
-			}
-			sz += 4;
+	{
+		for( ObjectCIter it = ObjectBegin(); it != ObjectEnd(); ++it ) {
+			sz += it->first.Len() + 2 + 3 + it->second.get_json_size() + 2;
 		}
+		sz += 4;
+	}
 		break;
 	default :
 		break;
@@ -606,36 +619,32 @@ int JsonVal::do_to_json( CStr * buf ) const
 		buf->Append( "\"" );
 		break;
 	case JSONVAL_TYPE_ARRAY :
-		{
-			int i, num;
-			num = GetArrayLen();
-			buf->Append( "[ " );
-			for( i = 0; i < num; ++i ) {
-				const JsonVal & item = GetItem( i );
-				if( i != 0 )
-					buf->Append( ", " );
-				item.do_to_json( buf );
-			}
-			buf->Append( " ]" );
+	{
+		int i, num;
+		num = Size();
+		buf->Append( "[ " );
+		for( i = 0; i < num; ++i ) {
+			const JsonVal & item = GetItem( i );
+			if( i != 0 )
+				buf->Append( ", " );
+			item.do_to_json( buf );
 		}
+		buf->Append( " ]" );
+	}
 		break;
 	case JSONVAL_TYPE_OBJECT :
-		{
-			std::vector< CStr > nms;
-			GetAllItemName( &nms );
-			std::vector< CStr >::iterator vit;
-			buf->Append( "{ " );
-			for( vit = nms.begin(); vit != nms.end(); ++ vit ) {
-				const JsonVal & item = GetItem( *vit );
-				if( vit != nms.begin() )
-					buf->Append( ", " );
-				buf->Append( "\"" );
-				buf->Append( *vit );
-				buf->Append( "\" : " );
-				item.do_to_json( buf );
-			}
-			buf->Append( " }" );
+	{
+		buf->Append( "{ " );
+		for( ObjectCIter it = ObjectBegin(); it != ObjectEnd(); ++it ) {
+			if( it != ObjectBegin() )
+				buf->Append( ", " );
+			buf->Append( "\"" );
+			buf->Append( it->first );
+			buf->Append( "\" : " );
+			it->second.do_to_json( buf );
 		}
+		buf->Append( " }" );
+	}
 		break;
 	default :
 		break;
@@ -746,7 +755,7 @@ int JsonVal::do_from_json( const char * str )
 				len += 1;
 				len += (int)strspn( str + len, " \t\r\n" );
 			}
-			JsonVal & item = GotItem( idx );
+			JsonVal & item = GetItem( idx );
 			int tmp = item.do_from_json( str + len );
 			if( tmp < 0 )
 				return -len + tmp; // tmp has add 1, so not need len + 1
@@ -786,7 +795,7 @@ int JsonVal::do_from_json( const char * str )
 				return -(len + 1);
 			len += 1;
 			len += (int)strspn( str + len, " \t\r\n" );
-			JsonVal & item = GotItem( nm.GetString() );
+			JsonVal & item = GetItem( nm.GetString() );
 			tmp = item.do_from_json( str + len );
 			if( tmp < 0 )
 				return -len + tmp;

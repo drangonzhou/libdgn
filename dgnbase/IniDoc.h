@@ -1,5 +1,5 @@
 // IniDoc.h : INI document parser
-// Copyright (C) 2012 ~ 2019 drangon zhou <drangon.zhou (at) gmail.com>
+// Copyright (C) 2012 ~ 2023 drangon zhou <drangon.zhou (at) gmail.com>
 //
 // This program is free software: you can redistribute it and/or modify it
 // under the terms of the GNU Lesser General Public License as published by
@@ -39,17 +39,21 @@ public:
 
 	// auto create new key if key not exist
 	CStr & Get( const CStr & key );
+	// Iter->first is key : const CStr &, Iter->second is val : CStr &
+	typedef std::map< CStr, CStr >::iterator Iter;
+	IniSection::Iter Begin() { return m_kvs.begin(); }
+	IniSection::Iter End() { return m_kvs.end(); }
 
-	int Set( const char * key, const char * val );
+	int Set( const char * key, const char * val ) { return Set( CStr().AttachConst( key ), CStr().AttachConst( val ) ); }
 	int Set( const CStr & key, const CStr & val );
-	int Del( const char * key );
+	int Del( const char * key ) { return Del( CStr().AttachConst( key ) ); }
 	int Del( const CStr & key );
 
 public:
-	// CIter->first is key : const CStr, CIter->second is val : const CStr
+	// CIter->first is key : const CStr &, CIter->second is val : const CStr &
 	typedef std::map< CStr, CStr >::const_iterator CIter;
-	CIter Begin() const { return m_kvs.begin(); }
-	CIter End() const { return m_kvs.end(); }
+	IniSection::CIter Begin() const { return m_kvs.begin(); }
+	IniSection::CIter End() const { return m_kvs.end(); }
 	int Size() const { return (int)m_kvs.size(); }
 	
 	// return NULL if key not exist
@@ -92,11 +96,10 @@ public:
 	// auto create new key if section or key not exist
 	CStr & Get( const CStr & name, const CStr & key );
 
-	// Iter->first is key : const CStr, Iter->second is val : IniSection
+	// Iter->first is key : const CStr &, Iter->second is val : IniSection &
 	typedef std::map< CStr, IniSection >::iterator Iter;
-	Iter Begin() { return m_sects.begin(); }
-	Iter End() { return m_sects.end(); }
-	int Size() { return (int)m_sects.size(); }
+	IniDoc::Iter Begin() { return m_sects.begin(); }
+	IniDoc::Iter End() { return m_sects.end(); }
 
 	int Set( const char * name, const char * key, const char * val ) { return Set( CStr().AttachConst( name ), CStr().AttachConst( key ), CStr().AttachConst( val ) ); }
 	int Set( const CStr & name, const CStr & key, const CStr & val );
@@ -104,10 +107,10 @@ public:
 	int Del( const CStr & name, const CStr & key );
 
 public:
-	// Iter->first is key : const CStr, Iter->second is val : const IniSection
+	// Iter->first is key : const CStr &, Iter->second is val : const IniSection &
 	typedef std::map< CStr, IniSection >::const_iterator CIter;
-	CIter Begin() const { return m_sects.begin(); }
-	CIter End() const { return m_sects.end(); }
+	IniDoc::CIter Begin() const { return m_sects.begin(); }
+	IniDoc::CIter End() const { return m_sects.end(); }
 	int Size() const { return (int)m_sects.size(); }
 
 	// return NULL if section not exist

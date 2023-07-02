@@ -1,5 +1,5 @@
 // CStr.h : String function
-// Copyright (C) 2011 ~ 2019 drangon <drangon.zhou (at) gmail.com>
+// Copyright (C) 2011 ~ 2023 drangon <drangon.zhou (at) gmail.com>
 //
 // This program is free software: you can redistribute it and/or modify it
 // under the terms of the GNU Lesser General Public License as published by

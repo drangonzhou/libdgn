@@ -1,5 +1,5 @@
 // IniDoc.cpp : INI document parser
-// Copyright (C) 2012 ~ 2019 drangon zhou <drangon.zhou (at) gmail.com>
+// Copyright (C) 2012 ~ 2023 drangon zhou <drangon.zhou (at) gmail.com>
 //
 // This program is free software: you can redistribute it and/or modify it
 // under the terms of the GNU Lesser General Public License as published by
@@ -21,14 +21,6 @@
 BEGIN_NS_DGN
 ////////////////
 
-int IniSection::Set( const char * key, const char * val )
-{
-	if( key == NULL || key[0] == '\0' )
-		return -1;
-	m_kvs[ CStr().AttachConst( key ) ] = val;
-	return 0;
-}
-
 int IniSection::Set( const CStr & key, const CStr & val )
 {
 	if( key.Len() == 0 )
@@ -37,14 +29,9 @@ int IniSection::Set( const CStr & key, const CStr & val )
 	return 0;
 }
 
-int IniSection::Del( const char * key )
-{
-	return m_kvs.erase( CStr().AttachConst( key ) );
-}
-
 int IniSection::Del( const CStr & key )
 {
-	return m_kvs.erase( key );
+	return (int)m_kvs.erase( key );
 }
 
 CStr & IniSection::Get( const CStr & key )
@@ -65,7 +52,7 @@ const CStr & IniSection::Get( const CStr & key ) const
 	std::map< CStr, CStr >::const_iterator it = m_kvs.find( CStr().AttachConst( key ) );
 	if( it == m_kvs.end() )
 		return CStr::EmptyCStrObj();
-	return it->second.Str();
+	return it->second;
 }
 
 int IniDoc::LoadFile( const char * fname )
@@ -81,7 +68,7 @@ int IniDoc::LoadFile( const char * fname )
 	fseek( fp, 0, SEEK_SET );
 	buf.Reserve( size + 1 );
 	char * p = buf.GetRaw();
-	int len = fread( p, 1, size, fp );
+	int len = (int)fread( p, 1, size, fp );
 	buf.ReleaseRaw( len );
 	fclose( fp ), fp = NULL;
 	return LoadBuf( buf );
@@ -223,7 +210,7 @@ int IniDoc::AddSection( const CStr & name )
 
 int IniDoc::DelSection( const CStr & name )
 {
-	return m_sects.erase( name );
+	return (int)m_sects.erase( name );
 }
 
 IniSection & IniDoc::GetSection( const CStr & name )

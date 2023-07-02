@@ -1,5 +1,5 @@
 // Logger.h : drangon logger
-// Copyright (C) 2012 ~ 2019 drangon zhou <drangon.zhou (at) gmail.com>
+// Copyright (C) 2012 ~ 2023 drangon zhou <drangon.zhou (at) gmail.com>
 //
 // This program is free software: you can redistribute it and/or modify it
 // under the terms of the GNU Lesser General Public License as published by
@@ -32,6 +32,7 @@ enum {
 #define DGN_LOG_LINE_END "\n"
 #endif
 
+// fmt must be string literals, and should not end with \r\n ( will auto add )
 #define PR_DEBUG( fmt, ... ) DGN_PR_LOG( DGN_LOG_LEVEL_DEBUG, fmt, ##__VA_ARGS__ )
 #define PR_INFO( fmt, ... ) DGN_PR_LOG( DGN_LOG_LEVEL_INFO, fmt, ##__VA_ARGS__ )
 #define PR_ERR( fmt, ... ) DGN_PR_LOG( DGN_LOG_LEVEL_ERR, fmt, ##__VA_ARGS__ )
@@ -48,6 +49,8 @@ enum {
 BEGIN_NS_DGN
 ////////////////
 
+#define MAX_LOG_FILENAME_LEN	512
+
 class DGN_LIB_API Logger
 {
 public:
@@ -63,7 +66,7 @@ public:
 	void DoAssert( const char * file, int line, const char * msg );
 
 protected:
-	int check_log_file( int year, int month, int day );
+	int check_log_file();
 
 protected:
 	int m_level;
@@ -71,11 +74,12 @@ protected:
 	int m_stderr_enable;
 
 	Mutex m_lock;
-	char m_fname[256];
+	char m_fname[MAX_LOG_FILENAME_LEN + 16];
+	int m_fname_len;
+	int m_max_size_mb;
+	int m_max_roll;
 	int m_fd;
-	int m_year;
-	int m_month;
-	int m_day;
+	int64_t m_file_size;
 };
 
 ////////////////

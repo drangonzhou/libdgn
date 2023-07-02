@@ -55,6 +55,9 @@ public:
 #endif
 	}
 
+	Mutex( const Mutex & lock ) = delete;
+	Mutex & operator = ( const Mutex & lock ) = delete;
+
 	void Lock()
 	{
 #ifdef _WIN32
@@ -88,6 +91,9 @@ public:
 	MutexGuard( Mutex * mutex ) : m_mutex( mutex ) { m_mutex->Lock(); }
 	~MutexGuard() { Detach(); }
 
+	MutexGuard( const MutexGuard & lockguard ) = delete;
+	MutexGuard & operator = ( const MutexGuard & lockguard ) = delete;
+
 	void Detach() { if( m_mutex != NULL ) { m_mutex->UnLock(); m_mutex = NULL; } return; }
 
 protected:
@@ -119,6 +125,9 @@ public:
 		pthread_cond_destroy( &m_cond );
 #endif
 	}
+
+	CondVal( const CondVal & val ) = delete;
+	CondVal & operator = ( const CondVal & val ) = delete;
 
 	// value == 0 means remove value, value > 0 means set value
 	void Signal( int val = 1 );
