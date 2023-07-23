@@ -122,6 +122,8 @@ public:
 	JsonVal::ArrayIter ArrayBegin();
 	JsonVal::ArrayIter ArrayEnd();
 
+	bool HasKey( const char * key ) const { return HasKey( CStr().AttachConst( key ) ); }
+	bool HasKey( const CStr & key ) const;
 	// return empty object if not object type or key not found
 	const JsonVal & GetItem( const char * key ) const { return GetItem( CStr().AttachConst(key) ); }
 	const JsonVal & GetItem( const CStr & key ) const;

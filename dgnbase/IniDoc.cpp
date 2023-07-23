@@ -233,14 +233,6 @@ int IniDoc::Del( const CStr & name, const CStr & key )
 	return GetSection( name ).Del( key );
 }
 
-const IniSection * IniDoc::GetSection( const char * name ) const
-{
-	CIter it = m_sects.find( CStr().AttachConst( name ) );
-	if( it == End() )
-		return NULL;
-	return &it->second;
-}
-
 static const IniSection s_default_sect;
 
 const IniSection & IniDoc::GetSection( const CStr & name ) const

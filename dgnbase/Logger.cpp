@@ -28,7 +28,6 @@
 #include <io.h>
 #define open _open
 #define lseek _lseek
-#define tell _tell
 #define close _close
 #define write _write
 #define unlink _unlink
@@ -191,8 +190,7 @@ int Logger::check_log_file()
 		m_fd = open( m_fname, flag, 0660 );
 		if( m_fd < 0 )
 			return -1;
-		lseek( m_fd, SEEK_END, 0 );
-		m_file_size = (int64_t)tell( m_fd );
+		m_file_size = lseek( m_fd, SEEK_END, 0 );
 		if( m_file_size < (int64_t)m_max_size_mb * 1024 * 1024 ) {
 			return 0;
 		}

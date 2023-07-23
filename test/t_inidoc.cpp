@@ -20,12 +20,52 @@
 
 using namespace dgn;
 
+const char * s_ini_s1 = R"ini(# abc
+ ; edf
+a = b
+
+[]
+a = c
+
+# [ sss ] sss
+#   	 = aa
+
+ [ sss ddd ]   	 
+ dsss fff = fsss dddef 	  
+
+ [	 ]  	  
+a2= d
+a3 =e
+a4 = fdfd
+a5 =
+a6 =   	  
+
+[ad]
+bb=dc
+	 	 dd 	 = ss		 )ini";
+
 TEST_CASE( "inidoc load/save", "[ini]")
 {
 	IniDoc doc;
 	int ret;
-	ret = doc.LoadFile( "sample_ini.ini" );
+	ret = doc.LoadBuf( s_ini_s1 );
 	CHECK( ret >= 0 );
 	ret = doc.SaveFile( "out_ini.ini" );
 	CHECK( ret >= 0 );
+	doc.Reset();
+	doc.AddSection( "abc" );
+	doc.Set( "a2", "b2", "123" );
+	doc.Set( "a2", "b3", "123" );
+	CHECK( doc.HasKey( "a2", "b2" ) );
+	doc.Del( "a2", "b3" );
+	CHECK( ! doc.HasKey( "a2", "b3" ) );
+	doc.DelSection( "a2" );
+	CHECK( ! doc.HasKey( "a2", "b2" ) );
+	CHECK( doc.Size() == 1 );
+
+	IniSection & sect = doc.GetSection( "abc" );
+	sect.Set( "a4", "123" );
+	CHECK( sect.Size() == 1 );
+	CHECK( sect.HasKey( "a4" ) );
+	CHECK( ! sect.HasKey( "a5" ) );
 }

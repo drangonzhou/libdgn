@@ -439,6 +439,13 @@ JsonVal::ArrayIter JsonVal::ArrayEnd()
 	return m_val.arr->end();
 }
 
+bool JsonVal::HasKey( const CStr & key ) const
+{
+	if( m_type != JSONVAL_TYPE_OBJECT )
+		return false;
+	return m_val.obj->find( key ) != m_val.obj->end();
+}
+
 const JsonVal & JsonVal::GetItem( const CStr & name ) const
 {
 	if( m_type != JSONVAL_TYPE_OBJECT )

@@ -20,6 +20,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\test\main.cpp" />
+    <ClCompile Include="..\test\t_atomic.cpp" />
+    <ClCompile Include="..\test\t_cstr.cpp" />
+    <ClCompile Include="..\test\t_file.cpp" />
     <ClCompile Include="..\test\t_inidoc.cpp" />
     <ClCompile Include="..\test\t_json.cpp" />
     <ClCompile Include="..\test\t_time.cpp" />

@@ -91,6 +91,8 @@ public:
 	int DelSection( const CStr & name );
 
 	// return new section if section not exist
+	IniSection & GetSection( const char * name ) { return GetSection( CStr().AttachConst( name ) ); }
+	// return new section if section not exist
 	IniSection & GetSection( const CStr & name );
 
 	// auto create new key if section or key not exist
@@ -113,8 +115,8 @@ public:
 	IniDoc::CIter End() const { return m_sects.end(); }
 	int Size() const { return (int)m_sects.size(); }
 
-	// return NULL if section not exist
-	const IniSection * GetSection( const char * name ) const;
+	// return empty IniSection if section not exist
+	const IniSection & GetSection( const char * name ) const { return GetSection( CStr().AttachConst( name ) ); }
 	// return empty IniSection if section not exist
 	const IniSection & GetSection( const CStr & name ) const;
 

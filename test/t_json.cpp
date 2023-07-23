@@ -40,10 +40,13 @@ TEST_CASE( "json test", "[json]")
 	jv.SetString( "abcd" );
 
 	jv.SetArray( 20 );
-	jv[3] = "abcd";
+	jv[30] = "abcd";
+	CHECK( jv.Size() == 31 );
 
 	jv.SetObject();
 	jv["ss"] = 34.34;
+	CHECK( jv.Size() == 1 );
+	CHECK( jv.HasKey( "ss" ) );
 
 	CStr str = jv.ToBuf();
 	jv = 20;

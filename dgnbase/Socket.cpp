@@ -655,7 +655,8 @@ int Socket::Poll( int want_evt, int * ret_evt, int check_timeout_interval_ms )
 		int diff = (int)( tm_end - now );
 		if( diff < 0 ) {
 			// PR_DEBUG( "tm_end %d, now %d", tm_end, now );
-			return 0;
+			// return 0;
+			diff = 0;  // at lease once
 		}
 
 		FD_ZERO( &rset );
@@ -677,8 +678,11 @@ int Socket::Poll( int want_evt, int * ret_evt, int check_timeout_interval_ms )
 			// PR_DEBUG( "select ret %d, errno %d", ret, GET_ERRNO() );
 			return 0;
 		}
-		if( ret == 0 )
+		if( ret == 0 ) {
+			if( diff == 0 )
+				return 0;
 			continue;
+		}
 		if( FD_ISSET( m_sock, &rset ) )
 			*ret_evt |= DGN_POLLIN;
 		if( FD_ISSET( m_sock, &wset ) || FD_ISSET( m_sock, &eset ) )
@@ -700,7 +704,8 @@ int Socket::Poll( int want_evt, int * ret_evt, int check_timeout_interval_ms )
 		int diff = (int)( tm_end - now );
 		if( diff < 0 ) {
 			// PR_DEBUG( "tm_end %d, now %d", tm_end, now );
-			return 0;
+			// return 0;
+			diff = 0;  // at lease once
 		}
 
 		pfd.fd = m_sock;
@@ -718,8 +723,11 @@ int Socket::Poll( int want_evt, int * ret_evt, int check_timeout_interval_ms )
 		if( ret < 0 && ! IS_ERR_EAGAIN() ) {
 			return 0;
 		}
-		if( ret <= 0 )
+		if( ret <= 0 ) {
+			if( diff == 0 )
+				return 0;
 			continue;
+		}
 		if( pfd.revents & POLLIN )
 			*ret_evt |= DGN_POLLIN;
 		if( pfd.revents & POLLOUT )
@@ -757,8 +765,9 @@ int Socket::Pollex( int num, Socket ** skarr, const int * want_evt, int * ret_ev
 		now = Time::Tick();
 		int diff = (int)( tm_end - now );
 		if( diff < 0 ) {
-			ret = 0;
-			break;
+			// ret = 0;
+			// break;
+			diff = 0; // at lease once
 		}
 
 		FD_ZERO( &rset );
@@ -780,8 +789,11 @@ int Socket::Pollex( int num, Socket ** skarr, const int * want_evt, int * ret_ev
 		tv.tv_usec = diff * 1000;
 
 		int ret = select( 0, &rset, &wset, &eset, &tv );
-		if( ret == 0 || (ret < 0 && IS_ERR_EAGAIN()) )
+		if( ret == 0 || ( ret < 0 && IS_ERR_EAGAIN() ) ) {
+			if( diff == 0 )
+				break;
 			continue;
+		}
 		if( ret < 0 )
 			break;
 
@@ -810,8 +822,9 @@ int Socket::Pollex( int num, Socket ** skarr, const int * want_evt, int * ret_ev
 		now = Time::Tick();
 		int diff = (int)( tm_end - now );
 		if( diff < 0 ) {
-			ret = 0;
-			return 0;
+			// ret = 0;
+			// return 0;
+			diff = 0;
 		}
 
 		pnum = 0;
@@ -831,8 +844,11 @@ int Socket::Pollex( int num, Socket ** skarr, const int * want_evt, int * ret_ev
 			diff = check_timeout_interval_ms;
 
 		int ret = poll( pfd, pnum, diff );
-		if( ret == 0 || (ret < 0 && IS_ERR_EAGAIN() ) )
+		if( ret == 0 || ( ret < 0 && IS_ERR_EAGAIN() ) ) {
+			if( diff == 0 )
+				break;
 			continue;
+		}
 		if( ret < 0 )
 			break;
 

@@ -29,11 +29,11 @@ BEGIN_NS_DGN
 ////////////////
 
 enum dgn_file_open_flag_e {
-	DGN_OPEN_DEFAULT = 0,  // default : open exist, read only
-	DGN_OPEN_READ = 0,
-	DGN_OPEN_WRITE = 1, // open exist, read/write
-	DGN_OPEN_CREATE = 2,     // open exist or create new, read/write
-	DGN_OPEN_CREATE_EXCL = 3, // like DGN_O_CREATE, but failed if already exist
+	DGN_OPEN_DEFAULT = 0,      // default : open exist, read only
+	DGN_OPEN_READ = 0,         //
+	DGN_OPEN_WRITE = 1,        // open exist, read/write
+	DGN_OPEN_CREATE = 2,       // open exist or create new, read/write
+	DGN_OPEN_CREATE_EXCL = 3,  // like DGN_O_CREATE, but failed if already exist
 };
 
 enum dgn_file_seek_e {

@@ -18,13 +18,12 @@ HOST_TYPE ?= linux
 OPT_LIB_DIR ?= /home/drangon/opt
 
 SRCS += $(wildcard *.cpp)
-SRCS += $(wildcard ../gtest/*.cpp)
 
 OBJS = $(foreach src, $(SRCS), $(basename $(src)).o)
 DEPS = $(foreach src, $(SRCS), $(basename $(src)).zzdep)
 
-PCH = ../gtest/gtest.h
-DEPS += $(PCH).gch.zzdep
+PCH = catch.hpp
+DEPS += $(PCH).catch.zzdep
 
 TARGET = test.exe
 
@@ -48,10 +47,8 @@ endif
 
 all : $(TARGET)
 
-# $(CXX) $(CFLAGS) -x c++-header libtestfc.h
-
 clean :
-	rm -f $(TARGET) *.so *.o *.zzdep ../gtest/*.o ../gtest/*.zzdep
+	rm -f $(TARGET) *.so *.o *.zzdep 
 
 
 $(TARGET) : $(OBJS) ./libdgnbase.so 
@@ -59,9 +56,6 @@ $(TARGET) : $(OBJS) ./libdgnbase.so
 
 ./libdgnbase.so : ../libdgnbase.so
 	cp ../libdgnbase.so .
-
-#./libdgnsup.so : ../libdgnsup.so
-#	cp ../libdgnsup.so .
 
 $(OBJS) : $(PCH).gch
 

@@ -26,7 +26,7 @@
 BEGIN_NS_DGN
 ////////////////
 
-class DGN_LIB_API Atomic
+class Atomic
 {
 public:
 	Atomic( int val = 0 ) : m_val( val ) {}
